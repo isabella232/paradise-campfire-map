@@ -17,7 +17,7 @@ export const timerDelay = 500;
 // https://www.mapbox.com/mapbox-gl-js/api/
 // https://docs.mapbox.com/help/how-mapbox-works/access-tokens/
 // https://docs.mapbox.com/help/glossary/access-token/
-export const mapboxAccessToken = '<mapbox-access-token>';
+export const mapboxAccessToken = 'pk.eyJ1IjoiZW5qYWxvdCIsImEiOiIzOTJmMjBiZmI2NGQ2ZjAzODhiMzhiOGI2MTI1YTk4YSJ9.sIOXXU3TPp5dLg_L3cUxhQ';
 
 export const mapboxConfig = {
   container: 'map',
@@ -31,20 +31,20 @@ export const mapboxConfig = {
 
 // mapd server connection string
 export const serverInfo = {
-  host: 'localhost',
-  port: 9092,
-  database: 'db',
-  username: 'user',
-  password: 'password'
+  host: '13.90.129.165',
+  port: 6273,
+  database: 'mapd',
+  username: 'mapd',
+  password: 'HyperInteractive!'
 };
 
 // damage color palette and labels config
 const colorPalette = {
-  "Destroyed (>50%)": "rgba(234,85,69,1)",
-  "Major (26-50%)": "rgba(239,155,32,1)",
-  "Minor (10-25%)": "rgba(179,61,198,1)",
-  "Affected (1-9%)": "rgba(189,207,50,1)",
-  "Other": "rgba(39,174,239,1)"
+  "Destroyed (>50%)": "rgba(216, 49, 49, 0.05)",
+  "Major (26-50%)": "rgba(255, 110, 0, 1)",
+  "Minor (10-25%)": "rgba(255, 204, 0, 1)",
+  "Affected (1-9%)": "rgba(255, 249, 211, 1)",
+  "Other": "rgba(255, 246, 165,1)"
 };
 
 const labels = {

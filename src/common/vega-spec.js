@@ -21,17 +21,17 @@ function getMarkSize(neLat, zoom) {
 
 export const createVegaSpec = ({map, endDate, damageFilter}) => {
 
-  // get map size
   const mapContainer = map.getContainer();
   const mapWidth = mapContainer.clientWidth;
   const mapHeight = mapContainer.clientHeight;
   
-  // convert NE/SW map bounds back to our custom Mercator x/y
   const {_ne, _sw} = map.getBounds();
   const [xMax, yMax] = conv4326To900913([_ne.lng, _ne.lat]);
   const [xMin, yMin] = conv4326To900913([_sw.lng, _sw.lat]);
-  // const strokeWidthZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([0.1, 1.2]);
-  const pointZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([1.5, 10]);
+  const strokeZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([6, 1]);
+
+  // to see the pointmap, change the [0, 0] here, for example to [0.5, 10]
+  const pointZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([0, 0]);
   const [markWidth, markHeight] = getMarkSize(_ne.lat, map.getZoom());
 
   // const startDate = endDate.getTime() - 1000 * 60 * 60 * 2;
@@ -39,7 +39,6 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
   const endDateString = timeFormatter(endDate);
   const ndviOpacity = 0.3;
 
-  // TODO: plug in date param in query (per day or hr???)
   const vegaSpec = {
     width: mapWidth,
     height: mapHeight,
@@ -64,14 +63,27 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
         FROM ca_butte_county_parcels 
         WHERE (ca_butte_county_parcels.LandUse ILIKE '%RS%')`
       },
-      {
-        name: "backendChoroplethLayer3",
-        format: "polys",
-        geocolumn: "omnisci_geo",
-        sql: `SELECT s2_DAMAGE as color, 
-          ca_butte_county_damaged_buildings_earliestdate.rowid as rowid 
-          FROM ca_butte_county_damaged_buildings_earliestdate
-          WHERE perDatTime <= '${endDateString}'`
+      // {
+      //   name: "backendChoroplethLayer3",
+      //   format: "polys",
+      //   geocolumn: "omnisci_geo",
+      //   sql: `SELECT s2_DAMAGE as color, 
+      //     ca_butte_county_damaged_buildings_earliestdate.rowid as rowid 
+      //     FROM ca_butte_county_damaged_buildings_earliestdate
+      //     WHERE perDatTime <= '${endDateString}'`
+      // },
+      {  
+      "name":"backendChoroplethLayer3",
+      "format":"polys",
+      "geocolumn":"omnisci_geo",
+      "sql": `SELECT s2_DAMAGE as color,
+        camp_fire_damaged_buildings_viirs_earliest_damage_date.rowid as rowid
+        FROM camp_fire_damaged_buildings_viirs_earliest_damage_date
+        WHERE ((
+            camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = 'Destroyed (>50%)'
+            OR camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = 'Affected (1-9%)'
+            OR camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = 'Minor (10-25%)'
+            OR camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = 'Major (26-50%)'))`
       },
       {  
         "name":"heatmap_querygeoheatLayer4",
@@ -154,14 +166,14 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           "Other"
         ],
         range: [
-          "rgba(234,85,69,1)",
-          "rgba(189,207,50,1)",
-          "rgba(179,61,198,1)",
-          "rgba(239,155,32,1)",
-          "rgba(39,174,239,1)"
+          getColor("Destroyed (>50%)"),
+          getColor("Major (26-50%)"),
+          getColor("Minor (10-25%)"),
+          getColor("Affected (1-9%)"),
+          getColor("Other")
         ],
-        default: "rgba(39,174,239,1)",
-        nullValue: "rgba(202,202,202,1)"
+        default: "rgba(214, 215, 214, 0.6)",
+        nullValue: "rgba(214, 215, 214, 0.6)"
       },
       {
         name: "backendChoroplethLayer3_fillColor",
@@ -174,14 +186,14 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           "Other"
         ],
         range: [
-          "rgba(234,85,69,0.6)",
-          "rgba(189,207,50,0.6)",
-          "rgba(179,61,198,0.6)",
-          "rgba(239,155,32,0.6)",
-          "rgba(39,174,239,0.6)"
+          getColor("Destroyed (>50%)"),
+          getColor("Major (26-50%)"),
+          getColor("Minor (10-25%)"),
+          getColor("Affected (1-9%)"),
+          getColor("Other")
         ],
-        nullValue: "rgba(214, 215, 214, 0.6)",
-        default: "rgba(214, 215, 214, 0.6)"
+        default: "rgba(214, 215, 214, 0.6)",
+        nullValue: "rgba(214, 215, 214, 0.6)"
       },
       {  
         "name":"heat_colorgeoheatLayer4",
@@ -194,15 +206,15 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           ]
         },
         "range":[  
-          `rgba(77,144,79,${ndviOpacity})`,
-          `rgba(90,166,81,${ndviOpacity})`,
-          `rgba(137,188,85,${ndviOpacity})`,
-          `rgba(191,211,89,${ndviOpacity})`,
-          `rgba(237,225,91,${ndviOpacity})`,
-          `rgba(237,179,78,${ndviOpacity})`,
-          `rgba(236,124,63,${ndviOpacity})`,
-          `rgba(225,75,49,${ndviOpacity})`,
-          `rgba(194,55,40,${ndviOpacity})`
+          `rgba(242, 255, 246, ${ndviOpacity})`,
+          `rgba(229, 252, 236, ${ndviOpacity})`,
+          `rgba(201, 237, 212, ${ndviOpacity})`,
+          `rgba(174, 226, 190, ${ndviOpacity})`,
+          `rgba(150, 211, 168, ${ndviOpacity})`,
+          `rgba(100, 173, 122, ${ndviOpacity})`,
+          `rgba(60, 150, 86, ${ndviOpacity})`,
+          `rgba(12, 127, 46, ${ndviOpacity})`,
+          `rgba(0, 79, 23, ${ndviOpacity})`
         ],
         "default": `rgba(13,8,135,${ndviOpacity})`,
         "nullValue": `rgba(153,153,153,${ndviOpacity})`
@@ -264,8 +276,11 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
             scale: "backendChoroplethLayer3_fillColor",
             field: "color"
           },
-          strokeColor: "white",
-          strokeWidth: 0,
+          strokeColor: {
+            scale: "backendChoroplethLayer3_fillColor",
+            field: "color"
+          },
+          strokeWidth: strokeZoomScale(map.getZoom()),
           lineJoin: "miter",
           miterLimit: 10
         },
