@@ -24,8 +24,8 @@ export const mapboxConfig = {
   style: 'mapbox://styles/mapbox/light-v9',
   center: [-121.62, 39.70],
   zoom: 2,
-  minZoom: 2,
-  maxZoom: 16,
+  minZoom: 10,
+  maxZoom: 18,
   maxBounds:  [[-121.99, 39.48], [-121.13, 39.99]]
 };
 

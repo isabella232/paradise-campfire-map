@@ -24,14 +24,12 @@ export function initTimeSlider() {
 
   // add slider input handler
   slider.addEventListener('input', throttle(onInput, WAIT_TIME_MS, {leading: true}));
-  console.log('time-slider:dayCount:', dayCount);
   return slider;
 }
 
 function onInput(event) {
   const sliderValue = event.target.value;
   const endDate = timeScale.invert(sliderValue);
-  console.log('time-slider:onInput(): value:', sliderValue, 'endDate:', timeFormatter(endDate));
   dispatcher.call('sliderInput', null, endDate); // null = that/this context
 }
 

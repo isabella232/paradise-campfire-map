@@ -14,17 +14,17 @@ let damageFilter = 'all';
 
 dispatcher.on('damageFilter', (damage) => {
   damageFilter = damage;
-  updateVega(getMap(), timeFormatter(endDateFilter), damageFilter);
+  updateVega(getMap(), endDateFilter, damageFilter);
   updateTimeLabel(endDateFilter);
 });
 
 dispatcher.on('sliderInput', (date) => {
   endDateFilter = date;
-  updateVega(getMap(),timeFormatter(endDateFilter), damageFilter);
+  updateVega(getMap(), endDateFilter, damageFilter);
   updateTimeLabel(date);
 });
 
 dispatcher.on('mapMove', () => {
   // update vega tiles with new map bounds
-  updateVega(getMap(), timeFormatter(endDateFilter), damageFilter);
+  updateVega(getMap(), endDateFilter, damageFilter);
 });
