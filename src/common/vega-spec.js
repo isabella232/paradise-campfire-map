@@ -28,10 +28,10 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
   const {_ne, _sw} = map.getBounds();
   const [xMax, yMax] = conv4326To900913([_ne.lng, _ne.lat]);
   const [xMin, yMin] = conv4326To900913([_sw.lng, _sw.lat]);
-  const strokeZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([6, 1]);
+  const strokeZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([5, 1]);
+  const damagedColorZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([0.05, 0.4]);
 
-  // to see the pointmap, change the [0, 0] here, for example to [0.5, 10]
-  const pointZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([0, 0]);
+  const pointZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([0, 5]);
   const [markWidth, markHeight] = getMarkSize(_ne.lat, map.getZoom());
 
   // const startDate = endDate.getTime() - 1000 * 60 * 60 * 2;
@@ -166,7 +166,7 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           "Other"
         ],
         range: [
-          getColor("Destroyed (>50%)"),
+          `rgba(216, 49, 49, ${damagedColorZoomScale(map.getZoom())})`,
           getColor("Major (26-50%)"),
           getColor("Minor (10-25%)"),
           getColor("Affected (1-9%)"),
@@ -186,7 +186,7 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           "Other"
         ],
         range: [
-          getColor("Destroyed (>50%)"),
+          `rgba(216, 49, 49, ${damagedColorZoomScale(map.getZoom())})`,
           getColor("Major (26-50%)"),
           getColor("Minor (10-25%)"),
           getColor("Affected (1-9%)"),

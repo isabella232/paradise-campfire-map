@@ -24,9 +24,9 @@ export const mapboxConfig = {
   style: 'mapbox://styles/mapbox/light-v9',
   center: [-121.62, 39.70],
   zoom: 2,
-  minZoom: 10,
-  maxZoom: 18,
-  maxBounds:  [[-121.99, 39.48], [-121.13, 39.99]]
+  minZoom: 11,
+  maxZoom: 15.7,
+  maxBounds:  [[-121.79, 39.63], [-121.34, 39.87]]
 };
 
 // mapd server connection string
@@ -40,7 +40,7 @@ export const serverInfo = {
 
 // damage color palette and labels config
 const colorPalette = {
-  "Destroyed (>50%)": "rgba(216, 49, 49, 0.05)",
+  "Destroyed (>50%)": "rgba(216, 49, 49, 0.1)",
   "Major (26-50%)": "rgba(255, 110, 0, 1)",
   "Minor (10-25%)": "rgba(255, 204, 0, 1)",
   "Affected (1-9%)": "rgba(255, 249, 211, 1)",
