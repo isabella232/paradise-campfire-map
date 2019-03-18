@@ -46,7 +46,6 @@ function saveConnection(mapdConnection) {
 
 async function logTables() {
   const tables = await connection.getTablesAsync();
-  console.log('mapd-connector:tables:', tables);
   // log all tables fields
   // tables.map(table => logFields(table.name));
   // TODO: comment this out for prod/demo deploy
@@ -59,11 +58,9 @@ async function logTables() {
 
 async function logFields(tableName) {
   const tableFields = await connection.getFieldsAsync(tableName);  
-  console.log(`mapd-connector:fields: (${tableName})`, tableFields);
 }
 
 async function getData(query) {
-  // console.log('mapd-connector:getData: query:', query);
   return await connection.queryAsync(query);
 }
 

@@ -9,7 +9,14 @@ export const initMap = () => {
   map = new mapboxgl.Map(mapboxConfig);
 
   // add basic nav controls
-  map.addControl(new mapboxgl.NavigationControl());
+  // map.addControl(new mapboxgl.NavigationControl({showCompass: false}));
+
+  var nav = new mapboxgl.NavigationControl({
+    showCompass: false,
+    showZoom: true
+  });
+
+  map.addControl(nav, "top-left");
 
   // add map move event handler
   function update() {
@@ -42,7 +49,6 @@ export const clearMap = () => {
 }
 
 export const zoomOut = () => {
-  console.log('map:zoomOut: bounds:', mapboxConfig);
   map.fitBounds(mapboxConfig.maxBounds);
 }
 
@@ -74,7 +80,7 @@ export const updateMap = (vegaImage) => {
       paint: {'raster-opacity': 0.85, 'raster-fade-duration': 0}
     });
   }
-  else {    
+  else {
     const imageSrc = map.getSource(mapOverlayName);
     imageSrc.updateImage({
       url: vegaImage,

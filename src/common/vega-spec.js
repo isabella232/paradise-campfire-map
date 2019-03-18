@@ -1,6 +1,6 @@
 import { getData, renderVega } from "./mapd-connector";
 import { conv4326To900913 } from "./map-utils";
-import { getLabel, getColor } from "./config";
+import { getLabel, getColor,  POI_START_DATE_STRING, POI_END_DATE_STRING} from "./config";
 import { updateMap } from "../components/map";
 import { updateCounterLabel } from '../components/counter-label';
 import { updateDamageChart } from '../components/damage-chart';
@@ -20,6 +20,7 @@ function getMarkSize(neLat, zoom) {
 }
 
 export const createVegaSpec = ({map, endDate, damageFilter}) => {
+  const zoomLevel = map.getZoom();
 
   const mapContainer = map.getContainer();
   const mapWidth = mapContainer.clientWidth;
@@ -30,14 +31,14 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
   const [xMin, yMin] = conv4326To900913([_sw.lng, _sw.lat]);
   const strokeZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([5, 1]);
   const damagedColorZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([0.05, 0.4]);
+  const otherColorZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([0, 0.4]);
 
   const pointZoomScale = scaleLinear().domain([map.getMinZoom(), map.getMaxZoom()]).range([0, 5]);
-  const [markWidth, markHeight] = getMarkSize(_ne.lat, map.getZoom());
+  const [markWidth, markHeight] = getMarkSize(_ne.lat, zoomLevel);
 
   // const startDate = endDate.getTime() - 1000 * 60 * 60 * 2;
   // const startDateString = timeFormatter(startDate);
-  const endDateString = timeFormatter(endDate);
-  const ndviOpacity = 0.3;
+  // const endDateString = timeFormatter(endDate);
 
   const vegaSpec = {
     width: mapWidth,
@@ -52,8 +53,17 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
         FROM ca_butte_county_damaged_points_earliestdate 
         WHERE ((ST_X(omnisci_geo) >= ${_sw.lng} AND ST_X(omnisci_geo) <= ${_ne.lng}) 
           AND (ST_Y(omnisci_geo) >= ${_sw.lat} AND ST_Y(omnisci_geo) <= ${_ne.lat}))
-          AND perDatTime <= '${endDateString}'
+          AND perDatTime <= '${POI_END_DATE_STRING}'
         LIMIT 2000000`
+      },
+      {
+        name: "backendChoroplethLayer0",
+        format: "polys",
+        geocolumn: "omnisci_geo",
+        sql: `SELECT fire_perim_camp.rowid as rowid 
+          FROM fire_perim_camp
+          WHERE (perDatTime <= '${POI_END_DATE_STRING}'
+            AND perDatTime >= '${POI_START_DATE_STRING}')`
       },
       {
         name: "backendChoroplethLayer1",
@@ -79,11 +89,10 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
       "sql": `SELECT s2_DAMAGE as color,
         camp_fire_damaged_buildings_viirs_earliest_damage_date.rowid as rowid
         FROM camp_fire_damaged_buildings_viirs_earliest_damage_date
-        WHERE ((
-            camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = 'Destroyed (>50%)'
-            OR camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = 'Affected (1-9%)'
-            OR camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = 'Minor (10-25%)'
-            OR camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = 'Major (26-50%)'))`
+        ${damageFilter != "all" ?
+          `WHERE camp_fire_damaged_buildings_viirs_earliest_damage_date.s2_DAMAGE = '${damageFilter}'` : ""
+        }
+        `
       },
       {  
         "name":"heatmap_querygeoheatLayer4",
@@ -166,7 +175,7 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           "Other"
         ],
         range: [
-          `rgba(216, 49, 49, ${damagedColorZoomScale(map.getZoom())})`,
+          `rgba(216, 49, 49, ${damagedColorZoomScale(zoomLevel)})`,
           getColor("Major (26-50%)"),
           getColor("Minor (10-25%)"),
           getColor("Affected (1-9%)"),
@@ -186,14 +195,14 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           "Other"
         ],
         range: [
-          `rgba(216, 49, 49, ${damagedColorZoomScale(map.getZoom())})`,
+          `rgba(216, 49, 49, ${damagedColorZoomScale(zoomLevel)})`,
           getColor("Major (26-50%)"),
           getColor("Minor (10-25%)"),
           getColor("Affected (1-9%)"),
           getColor("Other")
         ],
-        default: "rgba(214, 215, 214, 0.6)",
-        nullValue: "rgba(214, 215, 214, 0.6)"
+        default: "rgba(214, 215, 214, 0)",
+        nullValue: "rgba(214, 215, 214, 0)"
       },
       {  
         "name":"heat_colorgeoheatLayer4",
@@ -206,15 +215,10 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           ]
         },
         "range":[  
-          `rgba(242, 255, 246, ${ndviOpacity})`,
-          `rgba(229, 252, 236, ${ndviOpacity})`,
-          `rgba(201, 237, 212, ${ndviOpacity})`,
-          `rgba(174, 226, 190, ${ndviOpacity})`,
-          `rgba(150, 211, 168, ${ndviOpacity})`,
-          `rgba(100, 173, 122, ${ndviOpacity})`,
-          `rgba(60, 150, 86, ${ndviOpacity})`,
-          `rgba(12, 127, 46, ${ndviOpacity})`,
-          `rgba(0, 79, 23, ${ndviOpacity})`
+          `rgba(10, 252, 86, 0.1)`,
+          `rgba(10, 252, 86, 0.2)`,
+          `rgba(10, 252, 86, 0.3)`,
+          `rgba(10, 252, 86, 0.4)`,
         ],
         "default": `rgba(13,8,135,${ndviOpacity})`,
         "nullValue": `rgba(153,153,153,${ndviOpacity})`
@@ -260,10 +264,12 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
             },
             "width":10.05,
             "height":11.604740410711479,
-            "fillColor":{  
-               "scale":"heat_colorgeoheatLayer4",
-               "field":"color"
-            }
+            "fillColor": zoomLevel > 16 ? 
+              { value: "rgba(0,0,0,0)" } : // TODO disable the query instead of making this transparent
+              {  
+                 "scale":"heat_colorgeoheatLayer4",
+                 "field":"color"
+              }
          }
       },
       {
@@ -280,7 +286,21 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
             scale: "backendChoroplethLayer3_fillColor",
             field: "color"
           },
-          strokeWidth: strokeZoomScale(map.getZoom()),
+          strokeWidth: strokeZoomScale(zoomLevel),
+          lineJoin: "miter",
+          miterLimit: 10
+        },
+        transform: { projection: "mercator_map_projection" }
+      },
+      {
+        type: "polys",
+        from: { data: "backendChoroplethLayer0" },
+        properties: {
+          x: { field: "x" },
+          y: { field: "y" },
+          fillColor: { value: "rgba(237,225,91,0)" },
+          strokeColor: "red",
+          strokeWidth: 3,
           lineJoin: "miter",
           miterLimit: 10
         },
@@ -294,18 +314,18 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           yc: { scale: "y", field: "y" },
           fillColor: { scale: "pointmapLayer0_fillColor", field: "color" },
           shape: "circle",
-          width: pointZoomScale(map.getZoom()),
-          height: pointZoomScale(map.getZoom())
+          width: pointZoomScale(zoomLevel),
+          height: pointZoomScale(zoomLevel)
         }
       }
     ]
   };
+  console.log("vegaSpec", vegaSpec)
   return vegaSpec;
 };
 
-export const getDamageDataQuery = ({map, endDate}) => {
+export const getDamageDataQuery = ({map}) => {
   const {_ne, _sw} = map.getBounds();
-  const endDateString = timeFormatter(endDate);
   return `with filler as(
     select DAMAGE, 
     sum(0) as nonecount
@@ -321,7 +341,7 @@ export const getDamageDataQuery = ({map, endDate}) => {
         (ST_X(omnisci_geo) >= ${_sw.lng} AND ST_X(omnisci_geo) <= ${_ne.lng}) 
         AND 
         (ST_Y(omnisci_geo) >= ${_sw.lat} AND ST_Y(omnisci_geo) <= ${_ne.lat})
-  ) AND perDatTime <= '${endDateString}'
+  ) AND perDatTime <= '${POI_END_DATE_STRING}'
     GROUP BY 1 
     ORDER BY val DESC 
     NULLS LAST 
@@ -335,8 +355,16 @@ export const getDamageDataQuery = ({map, endDate}) => {
 }
 
 export function updateVega(map, endDate, damageFilter = 'all') {
+  const zoomLevel = map.getZoom();
+  const mapStyle = map.getStyle() || map.getStyle().name;
+  if (zoomLevel > 16 && mapStyle !== "Satellite") {
+    map.setStyle('mapbox://styles/mapbox/satellite-v9');
+  } else if (mapStyle !== "Mapbox Light") {
+    map.setStyle('mapbox://styles/mapbox/light-v9');
+  }
+
   // get data stats
-  getData(getDamageDataQuery({map, endDate}))
+  getData(getDamageDataQuery({map}))
     .then(result => {
       // NOTE: damage results are sorted by count values (see query above :)
       updateCounterLabel(result[0].val, getColor(result[0].key0));
@@ -345,7 +373,6 @@ export function updateVega(map, endDate, damageFilter = 'all') {
     .catch(error => {
       throw error;
     });
-
 
   // get vega tiles for the map
   const vegaSpec = createVegaSpec({map, endDate, damageFilter});

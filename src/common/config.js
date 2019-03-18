@@ -1,6 +1,8 @@
 // map data over time playback start/end date
 export const startDate = new Date('2018-11-08');
 export const endDate = new Date('2018-11-26');
+export const POI_START_DATE_STRING = "2018-11-20 20:00:00"
+export const POI_END_DATE_STRING = "2018-11-21 00:00:00"
 
 // time slider minor/hours ticks/steps per day
 // Note: hours period ticks are not displayed on below the time slider
@@ -26,6 +28,7 @@ export const mapboxConfig = {
   zoom: 2,
   minZoom: 11,
   maxZoom: 15.7,
+  maxZoom: 18,
   maxBounds:  [[-121.79, 39.63], [-121.34, 39.87]]
 };
 
