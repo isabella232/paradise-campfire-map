@@ -220,8 +220,8 @@ export const createVegaSpec = ({map, endDate, damageFilter}) => {
           `rgba(10, 252, 86, 0.3)`,
           `rgba(10, 252, 86, 0.4)`,
         ],
-        "default": `rgba(13,8,135,${ndviOpacity})`,
-        "nullValue": `rgba(153,153,153,${ndviOpacity})`
+        "default": `rgba(13,8,135,0)`,
+        "nullValue": `rgba(153,153,153,0)`
       }
     ],
     projections: [
