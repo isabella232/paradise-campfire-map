@@ -16,10 +16,6 @@ function onShowAllDamageLinkClick(event) {
 
 function showDamage(damage = "all") {
   dispatcher.call("damageFilter", null, damage); // null = that/this context
-  if (damage === "all") {
-    // zoom out for full area damage display
-    zoomOut();
-  }
 }
 
 export function updateDamageChart(damageData) {
@@ -33,7 +29,8 @@ export function updateDamageChart(damageData) {
   });
 
   // damage bar chart vega spec
-const vegaSpec = {
+  const vegaSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
     width: 190,
     height: 120,
     padding: 5,
@@ -119,7 +116,7 @@ const vegaSpec = {
           "barSelection": {
             fields: ["damageKey"],
             on: "click",
-            type: "single"
+            type: "multi"
           }
         }
       },
@@ -135,7 +132,7 @@ const vegaSpec = {
   vegaEmbed("#damage-chart", vegaSpec, { mode: "vega-lite" }).then(result => {
     // add damage bar selection handler
     result.view.addSignalListener("barSelection", (name, value) => {
-      showDamage(value.damageKey[0])
+      showDamage(value.damageKey)
     });
   });
 }
